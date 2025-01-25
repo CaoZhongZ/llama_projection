@@ -19,6 +19,7 @@ KVHidden = Headdim * 8
 Interm = 14336
 Vocab = 128256
 Block = 32
+Causal = True
 
 # inputs
 N = 32
@@ -42,6 +43,9 @@ prompt_kv = 2 * N * Prompt * KVHidden * kv_dtype
 time_rope = prompt_kv / B
 
 sdpa = 2 * N * Prompt * Prompt * Headdim * AttHeads
+if not Causal:
+    sdpa *= 2
+
 time_sdpa = sdpa / T
 
 # prefill roughly equal to promp compute time in each block
