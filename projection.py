@@ -41,8 +41,11 @@ logitw_size = Hidden * Vocab
 prompt_kv = 2 * N * Prompt * KVHidden * kv_dtype
 time_rope = prompt_kv / B
 
+sdpa = 4 * N * Prompt * Prompt * Headdim * AttHeads
+time_sdpa = sdpa / T
+
 # prefill roughly equal to promp compute time in each block
-time_prefill_1block = 2 * Prompt * N * C / T + time_rope
+time_prefill_1block = 2 * Prompt * N * C / T + time_rope + time_sdpa
 time_prefill_model = time_prefill_1block * Block
 
 # Generation in 1 transformer block, kv-history and model
