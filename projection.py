@@ -41,7 +41,7 @@ logitw_size = Hidden * Vocab
 prompt_kv = 2 * N * Prompt * KVHidden * kv_dtype
 time_rope = prompt_kv / B
 
-sdpa = 4 * N * Prompt * Prompt * Headdim * AttHeads
+sdpa = 2 * N * Prompt * Prompt * Headdim * AttHeads
 time_sdpa = sdpa / T
 
 # prefill roughly equal to promp compute time in each block
