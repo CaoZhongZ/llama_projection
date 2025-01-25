@@ -32,6 +32,7 @@ time_prefill_1block = 2 * Prompt * N * C / T
 time_prefill_model = time_prefill_1block * Block
 
 size_kv = 2 * N * (Prompt + Gen/2) * KVHidden * kv_dtype
+t_size_kv = 2 * N * (Prompt + Gen) * KVHidden * kv_dtype * Block
 gen_wread = C * w_dtype
 gen_ops = 2 * N * C
 
@@ -42,6 +43,10 @@ time_next = max(FinalW_size*fw_dtype/B, 2*N*FinalW_size/(T/fw_dtype))
 
 time = time_prefill_model + time_next + (time_gen_model + time_next) * Gen
 
+print("KV-cache size", t_size_kv/1024/1024, "MB")
 print("Time = ", time)
 print("T/s = ", N * (Gen + Prompt)/time)
+print("Prefill time", time_prefill_model + time_next)
+print("Generation time", (time_gen_model + time_next) * Gen)
+print("Gen:Prefill ratio", (time_gen_model + time_next) * Gen / (time_prefill_model + time_next))
 
