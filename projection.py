@@ -12,7 +12,7 @@ Interm = 14336
 Vocab = 128256
 Block = 32
 
-C = Hidden * (3 * Interm + Hidden + KVHidden * 2)
+C = Hidden * (3 * Interm + Hidden * 2 + KVHidden * 2)
 FinalW_size = Hidden * Vocab
 
 Prompt = 1024
