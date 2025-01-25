@@ -1,9 +1,13 @@
 import numpy as np
 
+# hardware
 B = 864*1000*1000*1000
 T = 733*1000*1000*1000*1000
-N = 32
+kv_dtype = 1
+w_dtype = 1
+fw_dtype = 2
 
+# model
 Hidden = 4096
 AttHeads = 32
 Headdim = Hidden / AttHeads
@@ -12,15 +16,13 @@ Interm = 14336
 Vocab = 128256
 Block = 32
 
-C = Hidden * (3 * Interm + Hidden * 2 + KVHidden * 2)
-FinalW_size = Hidden * Vocab
-
+# inputs
+N = 32
 Prompt = 1024
 Gen = 1024
 
-kv_dtype = 1
-w_dtype = 1
-fw_dtype = 2
+C = Hidden * (3 * Interm + Hidden * 2 + KVHidden * 2)
+FinalW_size = Hidden * Vocab
 
 time_prefill_1block = 2 * Prompt * N * C / T
 time_prefill_model = time_prefill_1block * Block
