@@ -51,10 +51,10 @@ time_prefill_model = time_prefill_1block * Block
 # other sophisticated functions
 size_kv = 2 * N * (Prompt + Gen/2) * KVHidden * kv_dtype
 t_size_kv = 2 * N * (Prompt + Gen) * KVHidden * kv_dtype * Block
-gen_wread = C * w_dtype
+weight_sz = C * w_dtype
 gen_ops = 2 * N * C
 
-time_gen_1block = size_kv / B + max(gen_wread/B, gen_ops/T)
+time_gen_1block = size_kv / B + max(weight_sz/B, gen_ops/T)
 time_gen_model = time_gen_1block * Block
 
 # Last gemm for the logits, non-trivial if large vocabulary
