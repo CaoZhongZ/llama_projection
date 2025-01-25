@@ -38,7 +38,7 @@ gen_ops = 2 * N * C
 time_gen_1block = size_kv / B + max(gen_wread/B, gen_ops/T)
 time_gen_model = time_gen_1block * Block
 
-time_next = max(FinalW_size*fw_dtype/B, 2*N*FinalW_size/T/2)
+time_next = max(FinalW_size*fw_dtype/B, 2*N*FinalW_size/(T/fw_dtype))
 
 time = time_prefill_model + time_next + (time_gen_model + time_next) * Gen
 
