@@ -4,19 +4,10 @@ import numpy as np
 from hw_config import *
 
 # model
-Hidden = 4096
-AttHeads = 32
-Headdim = Hidden / AttHeads
-KVHidden = Headdim * 8
-Interm = 14336
-Vocab = 128256
-Block = 32
-Causal = True
+from model_config import *
 
 # inputs
-N = 32
-Prompt = 1024
-Gen = 1024
+from batch_config import *
 
 # 10us host submission
 dummy_static =10/1000/1000
@@ -49,27 +40,29 @@ time_prefill_model = time_prefill_1block * Block
 # weights read or compute when batch size N is large
 # The max() is an over simplification which could turn into
 # other sophisticated functions
-size_kv = 2 * N * (Prompt + Gen/2) * KVHidden * kv_dtype
+size_kv = [2 * N * (Prompt + i) * KVHidden * kv_dtype for i in range(Gen)]
 t_size_kv = 2 * N * (Prompt + Gen) * KVHidden * kv_dtype * Block
 weight_sz = C * w_dtype
 gen_ops = 2 * N * C
 
-time_gen_1block = size_kv / B + max(weight_sz/B, gen_ops/T)
-time_gen_model = time_gen_1block * Block
+time_gen_1block = [each_kv / B + max(weight_sz/B, gen_ops/T) for each_kv in size_kv]
 
 # Last gemm for the logits, non-trivial if large vocabulary
 time_next = max(logitw_size*fw_dtype/B, 2*N*logitw_size/(T/(fw_dtype/w_dtype)))
+time_gen_token = [ gen_1block * Block + time_next for gen_1block in time_gen_1block ]
 
 # total time prefill, logit gemm and generation of each token
-time = time_prefill_model + time_next + (time_gen_model + time_next) * Gen
+time = time_prefill_model + time_next + np.sum(time_gen_token)
 
 # Output with confidence info. Gen/Prefill ratio gives intuition how each portion affect final t/s
 # Compute/Memory ratio show whether should downgrade memory efficiency
 print("KV-cache size", t_size_kv/1024/1024, "MB")
 print("Time = ", time)
-print("T/s = ", N * (Gen + Prompt)/time)
+print("T/s = ", N * Gen / time)
+print("T/s(vllm) = ", N * (Gen + Prompt)/time)
 print("Prefill time", time_prefill_model + time_next)
-print("Next time", time_gen_model + time_next)
-print("Generation time", (time_gen_model + time_next) * Gen)
-print("Gen:Prefill ratio", (time_gen_model + time_next) * Gen / (time_prefill_model + time_next))
+print("Next minmum: ", time_gen_token[0])
+print("Next maximum: ", time_gen_token[-1])
+print("Generation time", np.sum(time_gen_token))
+print("Gen:Prefill ratio", np.sum(time_gen_token) / (time_prefill_model + time_next))
 print("Compute/Memory ratio", (gen_ops/T)/(weight_sz/B))
