@@ -6,3 +6,4 @@ T = 1066*1000*1000*1000*1000 * T_eff
 kv_dtype = 1
 w_dtype = 1
 fw_dtype = 2
+L3_size = 203 * 1024 * 1024
