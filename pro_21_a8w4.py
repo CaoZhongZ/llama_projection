@@ -2,7 +2,7 @@ import numpy as np
 from statistics import show
 
 # hardware
-from g21 import *
+from g21_a8w4 import *
 
 # model
 Hidden = 4096
