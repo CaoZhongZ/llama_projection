@@ -76,14 +76,13 @@ FFN = 3 * Hidden * Interm
 # MoE modeling
 ep_rank = 0
 n_group = 8
-shared = 2
 
 # What is the chance a token activate new set of expert
 activation_rate = 0.6
 
 FFN_normal = 3 * Hidden * Interm
 FFN_expert = 3 * Hidden * moe_interm
-FFN_shared = 3 * Hidden * moe_interm * shared
+FFN_shared = 3 * Hidden * moe_interm * n_shared_experts
 
 # modeling gate fp32!!!
 Gate = Hidden * n_routed_experts
@@ -97,18 +96,19 @@ def project_ffn(N, Prompt):
 def project_ffn_moe(N, Prompt):
     act_max = min(N * Prompt * num_experts_per_tok, n_routed_experts)
     tok_per_expert = N * Prompt * num_experts_per_tok / act_max
-    ffn_gemm_read = FFN_expert * act_max + FFN_shared
+    ffn_gemm_read = FFN_expert * act_max
     ffn_gemm_compute = 2 * tok_per_expert * ffn_gemm_read
-    return max(ffn_gemm_read / B, ffn_gemm_compute / T)
+    ffn_gemm_shared = 2 * N * Prompt * FFN_shared
+    return max(ffn_gemm_read / B, ffn_gemm_compute / T) + max(ffn_gemm_shared / T, FFN_shared/B)
 
 def project_ffn_ratio(N, Prompt):
     act_max = min(N * Prompt * num_experts_per_tok, n_routed_experts)
     tok_per_expert = N * Prompt * num_experts_per_tok / act_max
     ffn_gemm_read = FFN_expert * act_max + FFN_shared
     ffn_gemm_compute = 2 * tok_per_expert * ffn_gemm_read
-    return ffn_gemm_compute/ffn_gemm_read
+    return ffn_gemm_compute/ T / (ffn_gemm_read/ B)
 
-weight_elem = mla_gemm_weights + 3 * Hidden * moe_interm * (n_routed_experts + num_experts_per_tok)
+weight_elem = mla_gemm_weights + 3 * Hidden * moe_interm * (n_routed_experts + n_shared_experts)
 weight_sz = weight_elem * w_dtype
 # last gemm
 logitw_size = Hidden * Vocab
