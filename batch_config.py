@@ -1,3 +1,3 @@
-N = 8
-Prompt = 1024
+N = 1
+Prompt = 938
 Gen = 1024

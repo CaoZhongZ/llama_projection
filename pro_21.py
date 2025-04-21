@@ -25,14 +25,18 @@ def dummy_time(tensor_size):
     dummy_ops=4
     return max(tensor_size / B, dummy_static) * dummy_ops
 
+def L3_cor(size):
+    return size if size > L3_size else size / 4
+
 # FF mlp + query + key + value + output in essential
 C = Hidden * (3 * Interm + Hidden * 2 + KVHidden * 2)
+I = 3 * L3_cor(N * Prompt * Hidden) + L3_cor(N * Prompt * Interm)
 # last gemm
 logitw_size = Hidden * Vocab
 
-prompt_kv = 2 * N * Prompt * KVHidden * kv_dtype
+prompt_kv = L3_cor(2 * N * Prompt * KVHidden * kv_dtype)
 time_rope = prompt_kv / B
-time_rsmnorm = 3 * prompt_kv / B
+time_rsmnorm = 2 * prompt_kv / B
 
 #
 sdpa = 2 * N * Prompt * Prompt * Headdim * AttHeads
@@ -49,12 +53,13 @@ time_prefill_model = time_prefill_1block * Block
 # weights read or compute when batch size N is large
 # The max() is an over simplification which could turn into
 # other sophisticated functions
+G = 3 * L3_cor(N * Hidden) + L3_cor(N * Interm)
 size_kv = [2 * N * (Prompt + i) * KVHidden * kv_dtype for i in range(Gen)]
 t_size_kv = 2 * N * (Prompt + Gen) * KVHidden * kv_dtype * Block
-weight_sz = (C + 2 * C/q_group) * w_dtype if w_dtype == 0.5 else C * w_dtype
+weight_sz = C * w_dtype + C/q_group * fw_dtype + C/q_group if w_dtype == 0.5 else C * w_dtype
 gen_ops = 2 * N * C
 
-time_gen_1block = [each_kv / B + max(weight_sz/B, gen_ops/T) for each_kv in size_kv]
+time_gen_1block = [each_kv / B + max((weight_sz + G)/B, gen_ops/T) for each_kv in size_kv]
 
 # Last gemm for the logits, non-trivial if large vocabulary
 time_next = max(logitw_size*fw_dtype/B, 2*N*logitw_size/(T/(fw_dtype/w_dtype)))

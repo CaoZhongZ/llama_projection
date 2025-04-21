@@ -7,3 +7,5 @@ kv_dtype = 2
 w_dtype = 0.5
 q_group = 128
 fw_dtype = 2
+
+L3_size = 16 * 1024 * 1024

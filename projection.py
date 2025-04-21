@@ -5,7 +5,7 @@ from statistics import show
 from hw_config import *
 
 # model
-from model_config import *
+from llama3_8b import *
 
 # inputs
 from batch_config import *
@@ -18,8 +18,12 @@ def dummy_time(tensor_size):
     dummy_ops=10
     return max(tensor_size / B, dummy_static) * dummy_ops
 
+def L3_correction(size):
+    size = size if size > L3_size else size / 4
+
 # FF mlp + query + key + value + output in essential
 C = Hidden * (3 * Interm + Hidden * 2 + KVHidden * 2)
+I = N * Prompt * (Hidden * 2 + Interm + Hidden)
 # last gemm
 logitw_size = Hidden * Vocab
 
